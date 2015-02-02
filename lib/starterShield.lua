@@ -24,8 +24,8 @@ LED.pins = {["blue"]="D2",["green"]="D3",["red"]="D4",["red2"]="D5"}
 
 LED.start = function()
 -- configure LED pins for output
-   storm.io.set_mode(storm.io.OUTPUT, storm.io.D2,
-		     storm.io.D3,
+   storm.io.set_mode(storm.io.OUTPUT, storm.io.D2, 
+		     storm.io.D3, 
 		     storm.io.D4,
 		     storm.io.D5)
 end
@@ -51,16 +51,13 @@ end
 -- DURATION is measured in milliseconds
 -- Returns the result of calling "invoke later", in case you want to cancel the event that turns of the LED at the end of the flash
 LED.flash=function(color,duration)
-    -- This was essentially given to us in the reading, so nothing new here. --
-    local pin = storm.io[LED.pins[color]] -- I'm guessing that's why we were given the table above
-    local trueDuration = 10
-    if duration then
-        trueDuration = duration
-    end
-    trueDuration = trueDuration * storm.os.MILLISECOND -- I think duration should be specified in milliseconds
-    storm.io.set(1, pin) -- Turn on the LED
-    -- Now, schedule the LED to be turned off after the desired duration --
-    return storm.os.invokeLater(trueDuration, function () storm.io.set(0, pin) end)
+   local pin = LED.pins[color] or LED.pins["red2"]
+   duration = duration or 10
+   storm.io.set(1,storm.io[pin])
+   storm.os.invokeLater(duration*storm.os.MILLISECOND,
+			function() 
+			   storm.io.set(0,storm.io[pin]) 
+			end)
 end
 
 ----------------------------------------------
@@ -69,36 +66,32 @@ end
 ----------------------------------------------
 local Buzz = {}
 
-Buzz.start = function ()
-    storm.io.set_mode(storm.io.OUTPUT, storm.io.D6)
-end
-
-Buzz.play_waveform = function (on_time, off_time)
-    Buzz.continue_buzzing = true
-    storm.os.invokeLater(on_time, function ()
-        storm.io.set(1, storm.io.D6)
-        storm.os.invokeLater(off_time, function ()
-            storm.io.set(0, storm.io.D6)
-            if Buzz.continue_buzzing then
-                Buzz.play(on_time, off_time)
-            end
-        end)
-    end)
-end
-
-Buzz.go = function(period)
-    Buzz.continue_buzzing = true
-    storm.os.invokeLater(period, function ()
-        storm.io.set(1, storm.io.D6)
-        storm.io.set(0, storm.io.D6)
-        if Buzz.continue_buzzing then
-            Buzz.go(period)
-        end
-    end)
+Buzz.run = nil
+Buzz.go = function(delay)
+   delay = delay or 0
+   -- configure buzzer pin for output
+   storm.io.set_mode(storm.io.OUTPUT, storm.io.D6)
+   Buzz.run = true
+   -- create buzzer filament and run till stopped externally
+   -- this demonstrates the await pattern in which
+   -- the filiment is suspended until an asynchronous call 
+   -- completes
+   cord.new(function()
+	       while Buzz.run do
+		  storm.io.set(1,storm.io.D6)
+		  storm.io.set(0,storm.io.D6)	       
+		  if (delay == 0) then cord.yield()
+		  else cord.await(storm.os.invokeLater, 
+				  delay*storm.os.MILLISECOND)
+		  end
+	       end
+	    end)
 end
 
 Buzz.stop = function()
-    Buzz.continue_buzzing = false
+   print ("Buzz.stop")
+   Buzz.run = false		-- stop Buzz.go partner
+-- configure pins to a low power state
 end
 
 ----------------------------------------------
@@ -107,23 +100,21 @@ end
 ----------------------------------------------
 local Button = {}
 
-Button.pins = {["left"]="D11", ["middle"]="D10", ["right"]="D9"}
+Button.pins = {"D9","D10","D11"}
 
 Button.start = function() 
-    storm.io.set_mode(storm.io.INPUT, storm.io.D9)
-    storm.io.set_mode(storm.io.INPUT, storm.io.D10)
-    storm.io.set_mode(storm.io.INPUT, storm.io.D11)
-    storm.io.set_pull(storm.io.PULL_UP, storm.io.D9)
-    storm.io.set_pull(storm.io.PULL_UP, storm.io.D10)
-    storm.io.set_pull(storm.io.PULL_UP, storm.io.D11)
+   -- set buttons as inputs
+   storm.io.set_mode(storm.io.INPUT,   
+		     storm.io.D9, storm.io.D10, storm.io.D11)
+   -- enable internal resistor pullups (none on board)
+   storm.io.set_pull(storm.io.PULL_UP, 
+		     storm.io.D9, storm.io.D10, storm.io.D11)
 end
 
 -- Get the current state of the button
--- can be used when polling buttons
--- BUTTON is "left", "right", or "middle"
--- Returns 1 if the button is not pressed and 0 if it is pressed
-Button.pressed = function(button)
-    return storm.io.get(storm.io[Button.pins[button]])
+-- can be used when poling buttons
+Button.pressed = function(button) 
+   return 1-storm.io.get(storm.io[Button.pins[button]]) 
 end
 
 -------------------
@@ -138,41 +129,28 @@ end
 -- none of these are debounced.
 -------------------
 Button.whenever = function(button, transition, action)
-    local pin = storm.io[Button.pins[button]]
-    return storm.io.watch_all(storm.io[transition], pin, action)
+   -- register call back to fire when button is pressed
+   local pin = Button.pins[button]
+   storm.io.watch_all(storm.io[transition], storm.io[pin], action)
 end
 
 Button.when = function(button, transition, action)
-    local pin = storm.io[Button.pins[button]]
-    return storm.io.watch_single(storm.io[transition], pin, action)
+   -- register call back to fire when button is pressed
+   local pin = Button.pins[button]
+   storm.io.watch_single(storm.io[transition], storm.io[pin], action)
 end
 
 Button.wait = function(button)
-    local pin = storm.io[Button.pins[button]]
-    cord.await(storm.io.watch_single, storm.io.FALLING, pin)
-end
-
--- A version of Button.whenever that is more reliable. Whenever a button is pressed, waits
--- for a fixed time before registering any additional events, largely preventing the
--- action from ocurring multiple times.
--- The watch is returned in an array-like table. To cancel the watch, cancel the first
--- element with storm.io.watch_cancel and cancel the second element IF IT IS NOT NIL
--- with storm.os.cancel.
--- If your application requires multiple button presses in quick succession, you should
--- consider lowering Button.GAP
-Button.GAP = 250
-Button.whenever_gap = function(button, transition, action)
-    local pin = storm.io[Button.pins[button]]
-    local a = {[0]=nil, [1]=nil}
-    a[0] = storm.io.watch_single(storm.io[transition], pin, function ()
-        action()
-        a[1] = storm.os.invokeLater(Button.GAP * storm.os.MILLISECOND, function ()
-            local new = Button.whenever_gap(button, transition, action)
-            a[0] = new[0]
-            a[1] = new[1]
-            end)
-    end)
-    return a
+-- Wait on a button press
+--   suspend execution of the filament
+--   resume and return when transition occurs
+-- DEC: this doesn't quite work.  Return to it
+   local pin = Button.pins[button]
+   cord.new(function()
+	       cord.await(storm.io.watch_single,
+			  storm.io.FALLING, 
+			  storm.io[pin])
+	    end)
 end
 
 ----------------------------------------------
