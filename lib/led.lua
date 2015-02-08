@@ -1,5 +1,5 @@
-require("storm") -- libraries for interfacing with the board and kernel
-require("cord") -- scheduler / fiber library
+-- require("storm") -- libraries for interfacing with the board and kernel
+-- require("cord") -- scheduler / fiber library
 
 ----------------------------------------------
 -- LED class
