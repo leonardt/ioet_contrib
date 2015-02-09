@@ -1,4 +1,5 @@
 require("cord")
+Button = require("button")
 MoodyLED = require("MoodyLED")
 
 -- initialize LEDs
@@ -52,7 +53,8 @@ server = function()
 				  		print(string.format("Temperature is: %d", message.temp))
 				  		print(string.format("Difference is: %d", message.diff))
 
-				  		green_led:play_behavior("transmission_fixed_brightness", 1000) -- show that the message has been received
+				  		green_led:play_behavior("transmission_fixed_brightness", 1000) 
+				  		-- show that the message has been received
 
 				  		if message.diff < -8 then 
 				  			-- REALLY HOT
@@ -77,4 +79,20 @@ end
 print("Started server")
 server()
 STARTUP()
+
+local b = Button:new("D9")
+b:whenever("RISING", function ()
+	CHILLY()
+end)
+
+local d = Button:new("D10")
+d:whenever("RISING", function ()
+	HOT()
+end)
+
+local e = Button:new("D11")
+e:whenever("RISING", function ()
+	HARMONY()
+end)
+
 cord.enter_loop()
