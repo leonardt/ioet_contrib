@@ -29,6 +29,7 @@ function createClass(...)
 	-- prepare 'c' to be the metatable of its instances
 	c.__index = c
 
+	-- new constructor
 	function c:new(o)
 		assert(o.pin and storm.io[o.pin], "invalid pin spec")
 		o = o or {}
@@ -41,6 +42,9 @@ function createClass(...)
 	return c -- new class returned
 end
 
+
+
+
 MoodyLED = createClass(moody, LED);
 
 function MoodyLED:play_behavior(name, duration)
@@ -48,8 +52,9 @@ function MoodyLED:play_behavior(name, duration)
 	print("Playing", name, "for", duration, "ms")
 	local speedup = duration / 298.0
 
-	c = cord.new(function()
-		behavior = time_diff(name)
+	local c = cord.new(function()
+		behavior = self:time_diff(name)
+
 		for i, seq in pairs(behavior) do
 			t, intensity = unpack(seq)
 			t = t * speedup
@@ -60,11 +65,10 @@ function MoodyLED:play_behavior(name, duration)
 				self:on()
 			end
 			cord.await(storm.os.invokeLater, t * storm.os.MILLISECOND )
-			-- print(t, intensity)
 		end
 
 		self:off()
 	end)
 end
 
-return MoodyLED;
+return MoodyLED

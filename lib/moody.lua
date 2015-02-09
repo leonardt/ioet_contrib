@@ -21,10 +21,10 @@ end
 
 function Moody:time_diff(name)
 	local b = {self.behaviors[name][1]}
-	last_tb = b[1][1]
+	local last_tb = b[1][1]
 	for i, tb in pairs(self.behaviors[name]) do
 		if i ~= 1 then
-			tstamp, intensity = unpack(tb)
+			local tstamp, intensity = unpack(tb)
 			table.insert(b, {tstamp - last_tb, intensity})
 			last_tb = tstamp
 		end

@@ -14,7 +14,6 @@ blue_led:print_behaviors()
 storm.os.invokePeriodically(14000 * storm.os.MILLISECOND, function()
 	s = cord.new(function()
 			for i, b in pairs(blue_led.behaviors) do 
-				print("   ", i)
 				blue_led:play_behavior(i, 2000)
 				cord.await(storm.os.invokeLater, 2100 * storm.os.MILLISECOND)
 			end
