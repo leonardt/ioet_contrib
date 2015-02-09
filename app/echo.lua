@@ -29,8 +29,11 @@ server = function()
    ssock = storm.net.udpsocket(7, 
 			       function(payload, from, port)
 				  brd:flash(1)
-				  print (string.format("from %s port %d: %s",from,port,payload))
+				  print(string.format("from %s port %d: %s",from,port,payload))
 				  print(storm.net.sendto(ssock, payload, from, cport))
+                                  -- print(string.format("roundtrip time: %d", 
+                                  --                     storm.os.now(storm.os.SHIFT_0) - 
+                                  --                     tonumber(payload:gsub("time=", ""))))
 				  brd:flash(1)
 			       end)
 end
@@ -48,13 +51,17 @@ count = 0
 csock = storm.net.udpsocket(cport, 
 			    function(payload, from, port)
 			       red:flash(3)
-			       print (string.format("echo from %s port %d: %s",from,port,payload))
+			       print(string.format("echo from %s port %d: %s",from,port,payload))
+                               -- print(string.format("roundtrip time: %d", 
+                               --                     storm.os.now(storm.os.SHIFT_0) - 
+                               --                     tonumber(payload)))
 			    end)
 
 -- send echo on each button press
 client = function()
    blu:flash(1)
-   local msg = string.format("0x%04x says count=%d", storm.os.nodeid(), count)
+   -- local msg = string.format("0x%04x says count=%d", storm.os.nodeid(), count)
+   local msg = string.format("%d", storm.os.now(storm.os.SHIFT_0))
    print("send:", msg)
    -- send upd echo to link local all nodes multicast
    storm.net.sendto(csock, msg, "ff02::1", 7) 
