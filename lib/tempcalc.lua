@@ -1,3 +1,5 @@
+math = require "math" 
+
 function calc_temp(temp, volt)
 	local a1 = 1.75e-3
 	local a2 = 1.678e-5
@@ -7,4 +9,5 @@ function calc_temp(temp, volt)
 	local b2 = 4.63e-9
 	local c2 = 13.4
 	S = 1 + (a1 * (temp - tref)  + a2 * ((temp - tref) * (temp - tref)))
+	return math.pow(math.pow(temp, 4) + volt/S), 1/4)
 end
