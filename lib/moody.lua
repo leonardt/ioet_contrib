@@ -31,23 +31,7 @@ function Moody:time_diff(name)
 	end
 end
 
-function Moody:play_behavior(name, duration)
-	duration = duration or 300
-	print("Playing", name, "for", duration, "ms")
-	local speedup = duration / 298.0
-	for i, seq in pairs(self.behaviors[name]) do
-		t, intensity = unpack(seq)
-		t = t * speedup
-		intensity = intensity or 0
-		if intensity > 20 then 
-			command = LED.off 
-		else 
-			command = LED.on
-		end
-		storm.os.invokeLater(t * storm.os.MILLISECOND, command)
-		print(t, intensity)
-	end
-end
+
 
 function Moody:is_moody()
 	return true
