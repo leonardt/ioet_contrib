@@ -29,6 +29,7 @@ function Moody:time_diff(name)
 			last_tb = tstamp
 		end
 	end
+	return b
 end
 
 

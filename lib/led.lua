@@ -34,6 +34,7 @@ end
 --    default repetition is 1
 --    assumes cord.enter_loop() is in effect to schedule filaments
 function LED:flash(times,duration)
+   print("Flashing", times, duration, self.pin)
    local pin = self.pin
    times = times or 1
    duration = duration or 10
