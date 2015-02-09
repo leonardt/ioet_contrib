@@ -64,7 +64,7 @@ function service_handler(payload, from, port)
    end
 end
 
-service_sock = storm.net.updsocket(service_port, service_handler)
+service_sock = storm.net.udpsocket(service_port, service_handler)
 
 sh = require "stormsh"
 sh.start()
