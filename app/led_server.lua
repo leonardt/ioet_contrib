@@ -7,9 +7,11 @@ brd = LED:new("GP0")
 server = function()
    ssock = storm.net.udpsocket(7, 
 			       function(payload, from, port)
-                                  local message = storm.mp.unpack(paylod)
-				  print(string.format("temperature is: ", message.temp))
+                        local message = storm.mp.unpack(payload)
+				  		print(string.format("Temperature is: %d", message.temp))
+				  		brd:flash() -- show that the message has been received
 			       end)
 end
 
 server()
+cord.enter_loop()
