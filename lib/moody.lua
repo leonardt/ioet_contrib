@@ -31,8 +31,6 @@ function Moody:time_diff(name)
 	end
 end
 
-
-
 function Moody:is_moody()
 	return true
 end
