@@ -6,7 +6,7 @@ csock = storm.net.udpsocket(cport,
 			    end)
 
 local svc_manifest = {id="HW-Defined-SW",
-                      publishToChannel={ s="sendMessage"}
+                      publishToChannel={ s="sendMessage"},
                       subscribeToChannel={ s="subscribe"}}
 
 local msg = storm.mp.pack(svc_manifest)
