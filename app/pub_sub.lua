@@ -1,3 +1,4 @@
+package.path = package.path .. ';../lib/?.lua'
 require("cord")
 cport = 49152
 
